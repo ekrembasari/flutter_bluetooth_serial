@@ -5,6 +5,9 @@ authors:
 - Patryk Ludwikowski <patryk.ludwikowski.7@gmail.com>
 homepage: https://github.com/edufolly/flutter_bluetooth_serial/tree/master/example/
 
+environment:
+  sdk: '>=2.10.0 <3.0.0'
+
 dependencies:
   flutter:
     sdk: flutter
