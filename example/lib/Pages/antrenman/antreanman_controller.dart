@@ -4,46 +4,141 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StateController extends GetxController {
-  var opacity = 0.2.obs;
+  var opacity = [
+    0.2.obs,
+    0.2.obs,
+    0.2.obs,
+    0.2.obs,
+    0.2.obs,
+  ];
   var isAllButtonsActivated = false;
   var playFlag = false.obs;
 
-  var progressValueDin = 0.0.obs;
-  var progressValueAnt = 1.0.obs;
-  var progressValueCal = 1.0.obs;
+  var progressValueDin = [0.0.obs, 0.0.obs, 0.0.obs, 0.0.obs, 0.0.obs];
+  var progressValueAnt = [1.0.obs, 1.0.obs, 1.0.obs, 1.0.obs, 1.0.obs];
+  var progressValueCal = [1.0.obs, 1.0.obs, 1.0.obs, 1.0.obs, 1.0.obs];
   var antTime = 20.obs;
   var calTime = 10.obs;
   var dinTime = 6.obs;
-  var isInProgress = false.obs;
+  var isInProgress = [false.obs, false.obs, false.obs, false.obs, false.obs];
 
+  var kutuTempNo = 4;
+
+// For all boxes 8 buttons contents and box play/pause button situation (9th value in array)
+// 5th one is for temp values.
   List buttonsContent = [
-    0.obs,
-    0.obs,
-    0.obs,
-    0.obs,
-    0.obs,
-    0.obs,
-    0.obs,
-    0.obs,
+    [
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+    ],
+    [
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+    ],
+    [
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+    ],
+    [
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+    ],
+    [
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+      0.obs,
+    ],
   ];
+
+  List kutuPlayFlag = [false.obs, false.obs, false.obs, false.obs, false.obs];
 
   List buttonsActivatedFlag = [
-    false.obs,
-    false.obs,
-    false.obs,
-    false.obs,
-    false.obs,
-    false.obs,
-    false.obs,
-    false.obs
+    [
+      //TODO tüm boxlar için buttons activated valueleri oluştur.
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs
+    ],
+    [
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs
+    ],
+    [
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs
+    ],
+    [
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs
+    ],
+    [
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs,
+      false.obs
+    ]
   ];
 
-  List kutuActivatedFlag = [
-    false.obs,
-    false.obs,
-    false.obs,
-    false.obs,
-  ];
+  List kutuActivatedFlag = [false.obs, false.obs, false.obs, false.obs];
+//Kutuya ilk bağlandığımızda temp buttonsContent dizisini kutu dizisine aktarıyoruz. 2. ve sonrası için bunu yapmıyoruz.
+  List kutuConnectedBeforeFlag = [false.obs, false.obs, false.obs, false.obs];
+
   List antrenmanSuresi = [
     [10.obs, 15.obs, 20.obs, 25.obs, 30.obs],
     [15.obs, 20.obs, 25.obs, 30.obs],
@@ -62,19 +157,20 @@ class StateController extends GetxController {
     7.obs,
     8.obs,
     9.obs,
-    10.obs,
+    10.obs
   ];
-  void changeOpacity(double opacity) {
-    this.opacity.value = opacity;
+  void changeOpacity(double opacity, int kutuNo) {
+    this.opacity[kutuNo].value = opacity;
   }
 
-  void arttir() {
-    if (playFlag.value) {
-      for (var v = 0; v < buttonsContent.length; v++) {
-        if (buttonsActivatedFlag[v].value) {
-          int intTemp = buttonsContent[v].value + 1;
+  void arttir(int boxNum) {
+    if (kutuPlayFlag[boxNum].value) {
+      //Play Flag for related box
+      for (var v = 0; v < buttonsContent[boxNum].length; v++) {
+        if (buttonsActivatedFlag[boxNum][v].value) {
+          int intTemp = buttonsContent[boxNum][v].value + 1;
           if (intTemp >= 0 && intTemp <= 100) {
-            buttonsContent[v].value = intTemp;
+            buttonsContent[boxNum][v].value = intTemp;
           }
           // print("Button " +
           //     v.toString() +
@@ -85,13 +181,14 @@ class StateController extends GetxController {
     }
   }
 
-  void azalt() {
-    if (playFlag.value) {
-      for (var v = 0; v < buttonsContent.length; v++) {
-        if (buttonsActivatedFlag[v].value) {
-          int intTemp = buttonsContent[v].value - 1;
+  void azalt(int boxNum) {
+    if (kutuPlayFlag[boxNum].value) {
+      //Play Flag for related box
+      for (var v = 0; v < buttonsContent[boxNum].length; v++) {
+        if (buttonsActivatedFlag[boxNum][v].value) {
+          int intTemp = buttonsContent[boxNum][v].value - 1;
           if (intTemp >= 0 && intTemp <= 100) {
-            buttonsContent[v].value = intTemp;
+            buttonsContent[boxNum][v].value = intTemp;
           }
           // print("Button " +
           //     v.toString() +
@@ -102,10 +199,11 @@ class StateController extends GetxController {
     }
   }
 
-  void doubleTapped() {
-    if (playFlag.value) {
-      for (var v = 0; v < buttonsActivatedFlag.length; v++) {
-        buttonsActivatedFlag[v].value = !isAllButtonsActivated;
+  void doubleTapped(int boxNum) {
+    if (kutuPlayFlag[boxNum].value) {
+      //Play Flag for related box
+      for (var v = 0; v < buttonsActivatedFlag[boxNum].length; v++) {
+        buttonsActivatedFlag[boxNum][v].value = !isAllButtonsActivated;
         // print("Button " +
         //     v.toString() +
         //     " state =" +
@@ -141,48 +239,51 @@ class StateController extends GetxController {
   //   });
   // }
 
-  void updateProgressAntrenmanSuresi(int antSuresi) {
+  void updateProgressAntrenmanSuresi(int antSuresi, int kutuNo) {
     const oneMin = const Duration(minutes: 1);
-    isInProgress = true.obs;
+    isInProgress[kutuNo] = true.obs;
 
-    new Timer.periodic(oneMin, (Timer t) {
-      if (!playFlag.value) {
-        t.cancel();
-        return;
-      }
-      progressValueAnt.value -= 1 / antSuresi;
-      // we "finish" downloading here
-      if (progressValueAnt <= 0.0) {
-        isInProgress.value = false;
-        t.cancel();
-        progressValueAnt.value = 1;
-        //TODO Antrenman bittikten sonra play butonu başlangıc durumuna getirmek adına aşagıdaki
-        //kodu düzenleyecegim
-        playFlag.value = false;
-        return;
-      }
-    });
+    new Timer.periodic(
+      oneMin,
+      (Timer t) {
+        for (var i = 0; i < 4; i++) {
+          if (kutuPlayFlag[i].value) {
+            progressValueAnt[i].value -= 1 / antSuresi;
+            // we "finish" downloading here
+            if (progressValueAnt[i] <= 0.0) {
+              isInProgress[kutuNo].value = false;
+              t.cancel();
+              progressValueAnt[i].value = 1;
+              //TODO Antrenman bittikten sonra play butonu başlangıc durumuna getirmek adına aşagıdaki
+              //kodu düzenleyecegim
+              kutuPlayFlag[i].value = false;
+              return;
+            }
+          }
+        }
+      },
+    );
   }
 
-  void updateProgressCal(int calSuresi, int dinSuresi) {
+  void updateProgressCal(int calSuresi, int dinSuresi, int kutuNo) {
     const oneSec = const Duration(seconds: 1);
 
     new Timer.periodic(oneSec, (Timer t) {
-      if (!playFlag.value) {
+      if (!kutuPlayFlag[kutuNo].value) {
         t.cancel();
         return;
       }
-      progressValueCal.value -= 1 / calSuresi;
+      progressValueCal[kutuNo].value -= 1 / calSuresi;
       // we "finish" downloading here
-      if (progressValueCal.value <= 0.0) {
+      if (progressValueCal[kutuNo].value <= 0.0) {
         //isLoading.value = false;
 
-        progressValueDin.value = 1.0;
+        progressValueDin[kutuNo].value = 1.0;
         //TODO Antrenman bittikten sonra play butonu başlangıc durumuna getirmek adına aşagıdaki
         //kodu düzenleyecegim
         //playFlag.value = false;
-        if (isInProgress.value) {
-          updateProgressDin(calSuresi, dinSuresi);
+        if (isInProgress[kutuNo].value) {
+          updateProgressDin(calSuresi, dinSuresi, kutuNo);
         }
         t.cancel();
         return;
@@ -190,26 +291,26 @@ class StateController extends GetxController {
     });
   }
 
-  void updateProgressDin(int calSuresi, int dinSuresi) {
+  void updateProgressDin(int calSuresi, int dinSuresi, int kutuNo) {
     const oneSec = const Duration(seconds: 1);
     //progressValueDin.value = 1.0;
 
     new Timer.periodic(oneSec, (Timer t) {
-      if (!playFlag.value) {
+      if (!kutuPlayFlag[kutuNo].value) {
         t.cancel();
         return;
       }
-      progressValueDin.value -= 1 / dinSuresi;
+      progressValueDin[kutuNo].value -= 1 / dinSuresi;
       // we "finish" downloading here
-      if (progressValueDin.value <= 0.0) {
+      if (progressValueDin[kutuNo].value <= 0.0) {
         //isLoading.value = false;
 
-        progressValueCal.value = 1.0;
+        progressValueCal[kutuNo].value = 1.0;
         //TODO Antrenman bittikten sonra play butonu başlangıc durumuna getirmek adına aşagıdaki
         //kodu düzenleyecegim
         //playFlag.value = false;
-        if (isInProgress.value) {
-          updateProgressCal(calSuresi, dinSuresi);
+        if (isInProgress[kutuNo].value) {
+          updateProgressCal(calSuresi, dinSuresi, kutuNo);
         }
         t.cancel();
         return;

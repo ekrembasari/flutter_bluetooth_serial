@@ -49,6 +49,10 @@ class _ChatPage extends State<ChatPage> {
   int calSuresi;
   int dinSuresi;
   int antSuresi;
+  int tempBoxNum = 4; // For temp values of buttons 0-100
+  int connectedBoxNum = 4;
+  int playFlagNum =
+      8; // controller.buttonsContent[tempBoxNum][8] is for play/pause button current stiation 0=pause 1=on
   final TextEditingController textEditingController =
       new TextEditingController();
   final ScrollController listScrollController = new ScrollController();
@@ -64,54 +68,59 @@ class _ChatPage extends State<ChatPage> {
     super.initState();
 //TODO timer'ı dakika bitince durmali.
     controller.playFlag.value = false;
-    controller.progressValueAnt.value = 1.0;
-    controller.progressValueCal.value = 1.0;
-    controller.progressValueDin.value = 0.0;
+
+    controller.progressValueAnt[tempBoxNum].value = 1.0;
+    controller.progressValueCal[tempBoxNum].value = 1.0;
+    controller.progressValueDin[tempBoxNum].value = 0.0;
+
+    var playFlagText = controller.kutuPlayFlag[tempBoxNum].value ? "1" : "0";
+
     timer = Timer.periodic(
         Duration(seconds: 2),
         (Timer t) => isConnected
             ? {
-                if (controller.playFlag.value)
+                playFlagText =
+                    controller.kutuPlayFlag[tempBoxNum].value ? "1" : "0",
+
+                for (int i = 0; i < 12; i++)
                   {
-                    for (int i = 0; i < 12; i++)
-                      {
-                        _sendMessage(";;;"),
-                      },
+                    _sendMessage(";;;"),
+                  },
 
-                    _sendMessage("b"),
-                    _sendMessage(widget.modMessage.join(",") +
-                        "," +
-                        controller.buttonsContent.join(",") +
-                        ","),
+                _sendMessage("b"),
+                print(controller.buttonsContent[tempBoxNum].join(",")),
+                _sendMessage(widget.modMessage.join(",") +
+                    "," +
+                    controller.buttonsContent[tempBoxNum].join(",") +
+                    "," +
+                    playFlagText +
+                    ","),
 
-                    // for (int i = 0; i < 6; i++)
-                    //   {
-                    //     _sendMessage(widget.modMessage[i].toString()),
+                // for (int i = 0; i < 6; i++)
+                //   {
+                //     _sendMessage(widget.modMessage[i].toString()),
 
-                    //     _sendMessage(","),
+                //     _sendMessage(","),
 
-                    //   },
+                //   },
 
-                    // for (int i = 0; i < 8; i++)
-                    //   {
-                    //     _sendMessage(controller.buttonsContent[i].toString()),
-                    //     _sendMessage(","),
-                    //   },
-                    // _sendMessage(widget.modMessage.join(",") +
-                    //     controller.buttonsContent.join(",")),
+                // for (int i = 0; i < 8; i++)
+                //   {
+                //     _sendMessage(controller.buttonsContent[i].toString()),
+                //     _sendMessage(","),
+                //   },
+                // _sendMessage(widget.modMessage.join(",") +
+                //     controller.buttonsContent.join(",")),
 
-                    _sendMessage("e"),
-                    print(connection.isConnected.toString()),
+                _sendMessage("e"),
+                print(connection.isConnected.toString()),
 
-                    for (int i = 0; i < 6; i++)
-                      {
-                        _sendMessage("..."),
-                      },
-                    // _sendMessage(widget.modMessage.join(",") +
-                    //     controller.buttonsContent.join(",")),
-                  }
-                else
-                  {print("Bluetooth baglantisi kesildi!!")}
+                for (int i = 0; i < 6; i++)
+                  {
+                    _sendMessage("..."),
+                  },
+                // _sendMessage(widget.modMessage.join(",") +
+                //     controller.buttonsContent.join(",")),
               }
             : {
                 print("Baglanti Yok"),
@@ -162,10 +171,13 @@ class _ChatPage extends State<ChatPage> {
       controller.kutuActivatedFlag[i].value = false;
     }
     for (var i = 0; i < 8; i++) {
-      controller.buttonsContent[i].value = 0;
-      controller.buttonsActivatedFlag[i].value = false;
+      controller.buttonsActivatedFlag[tempBoxNum][i].value = false;
+
+      for (var v = 0; v < 4; v++) {
+        controller.buttonsContent[v][i].value = 0;
+      }
     }
-    controller.isInProgress.value = false;
+    controller.isInProgress[tempBoxNum].value = false;
     timer?.cancel();
     super.dispose();
   }
@@ -197,7 +209,9 @@ class _ChatPage extends State<ChatPage> {
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
                         child: Opacity(
-                          opacity: controller.playFlag.value ? 1.0 : 0.0,
+                          opacity: controller.kutuPlayFlag[tempBoxNum].value
+                              ? 1.0
+                              : 0.0,
                           child: Image.asset(
                             'assets/PNG/AntrenmanEkraniAktif/cikis_buton.png',
                             height: Get.height / 10,
@@ -218,16 +232,19 @@ class _ChatPage extends State<ChatPage> {
                     children: [
                       //boyun
                       GestureDetector(
-                        onTap: () => controller.buttonsActivatedFlag[0].value =
-                            !controller.buttonsActivatedFlag[0].value,
-                        onDoubleTap: () => controller.doubleTapped(),
+                        onTap: () => controller
+                                .buttonsActivatedFlag[tempBoxNum][0].value =
+                            !controller
+                                .buttonsActivatedFlag[tempBoxNum][0].value,
+                        onDoubleTap: () => controller.doubleTapped(tempBoxNum),
                         child: Stack(
                           alignment: Alignment(0, -0.5),
                           children: [
                             Opacity(
-                              opacity: controller.opacity.value,
+                              opacity: controller.opacity[tempBoxNum].value,
                               child: Image.asset(
-                                controller.buttonsActivatedFlag[0].value
+                                controller.buttonsActivatedFlag[tempBoxNum][0]
+                                        .value
                                     ? "assets/PNG/AntrenmanEkraniAktif/vucudYuvarlakButtonAktif.png"
                                     : "assets/PNG/AntrenmanEkraniAktif/vucudYuvalakButton.png",
                                 height: Get.height / 7,
@@ -245,7 +262,8 @@ class _ChatPage extends State<ChatPage> {
                               padding:
                                   EdgeInsets.only(top: buttonNumTextPadding),
                               child: Text(
-                                controller.buttonsContent[0].value.toString(),
+                                controller.buttonsContent[tempBoxNum][0].value
+                                    .toString(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     color: Colors.white,
@@ -257,16 +275,19 @@ class _ChatPage extends State<ChatPage> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () => controller.buttonsActivatedFlag[1].value =
-                            !controller.buttonsActivatedFlag[1].value,
-                        onDoubleTap: () => controller.doubleTapped(),
+                        onTap: () => controller
+                                .buttonsActivatedFlag[tempBoxNum][1].value =
+                            !controller
+                                .buttonsActivatedFlag[tempBoxNum][1].value,
+                        onDoubleTap: () => controller.doubleTapped(tempBoxNum),
                         child: Stack(
                           alignment: Alignment(0, -0.5),
                           children: [
                             Opacity(
-                              opacity: controller.opacity.value,
+                              opacity: controller.opacity[tempBoxNum].value,
                               child: Image.asset(
-                                controller.buttonsActivatedFlag[1].value
+                                controller.buttonsActivatedFlag[tempBoxNum][1]
+                                        .value
                                     ? "assets/PNG/AntrenmanEkraniAktif/vucudYuvarlakButtonAktif.png"
                                     : "assets/PNG/AntrenmanEkraniAktif/vucudYuvalakButton.png",
                                 height: Get.height / 7,
@@ -284,7 +305,8 @@ class _ChatPage extends State<ChatPage> {
                               padding:
                                   EdgeInsets.only(top: buttonNumTextPadding),
                               child: Text(
-                                controller.buttonsContent[1].value.toString(),
+                                controller.buttonsContent[tempBoxNum][1].value
+                                    .toString(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     color: Colors.white,
@@ -296,16 +318,19 @@ class _ChatPage extends State<ChatPage> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () => controller.buttonsActivatedFlag[2].value =
-                            !controller.buttonsActivatedFlag[2].value,
-                        onDoubleTap: () => controller.doubleTapped(),
+                        onTap: () => controller
+                                .buttonsActivatedFlag[tempBoxNum][2].value =
+                            !controller
+                                .buttonsActivatedFlag[tempBoxNum][2].value,
+                        onDoubleTap: () => controller.doubleTapped(tempBoxNum),
                         child: Stack(
                           alignment: Alignment(0, -0.5),
                           children: [
                             Opacity(
-                              opacity: controller.opacity.value,
+                              opacity: controller.opacity[tempBoxNum].value,
                               child: Image.asset(
-                                controller.buttonsActivatedFlag[2].value
+                                controller.buttonsActivatedFlag[tempBoxNum][2]
+                                        .value
                                     ? "assets/PNG/AntrenmanEkraniAktif/vucudYuvarlakButtonAktif.png"
                                     : "assets/PNG/AntrenmanEkraniAktif/vucudYuvalakButton.png",
                                 height: Get.height / 7,
@@ -323,7 +348,8 @@ class _ChatPage extends State<ChatPage> {
                               padding:
                                   EdgeInsets.only(top: buttonNumTextPadding),
                               child: Text(
-                                controller.buttonsContent[2].value.toString(),
+                                controller.buttonsContent[tempBoxNum][2].value
+                                    .toString(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     color: Colors.white,
@@ -335,16 +361,19 @@ class _ChatPage extends State<ChatPage> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () => controller.buttonsActivatedFlag[3].value =
-                            !controller.buttonsActivatedFlag[3].value,
-                        onDoubleTap: () => controller.doubleTapped(),
+                        onTap: () => controller
+                                .buttonsActivatedFlag[tempBoxNum][3].value =
+                            !controller
+                                .buttonsActivatedFlag[tempBoxNum][3].value,
+                        onDoubleTap: () => controller.doubleTapped(tempBoxNum),
                         child: Stack(
                           alignment: Alignment(0, -0.5),
                           children: [
                             Opacity(
-                              opacity: controller.opacity.value,
+                              opacity: controller.opacity[tempBoxNum].value,
                               child: Image.asset(
-                                controller.buttonsActivatedFlag[3].value
+                                controller.buttonsActivatedFlag[tempBoxNum][3]
+                                        .value
                                     ? "assets/PNG/AntrenmanEkraniAktif/vucudYuvarlakButtonAktif.png"
                                     : "assets/PNG/AntrenmanEkraniAktif/vucudYuvalakButton.png",
                                 height: Get.height / 7,
@@ -362,7 +391,8 @@ class _ChatPage extends State<ChatPage> {
                               padding:
                                   EdgeInsets.only(top: buttonNumTextPadding),
                               child: Text(
-                                controller.buttonsContent[3].value.toString(),
+                                controller.buttonsContent[tempBoxNum][3].value
+                                    .toString(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     color: Colors.white,
@@ -399,7 +429,8 @@ class _ChatPage extends State<ChatPage> {
                                     {
                                       disconnectBluetooth(),
                                       controller.kutuActivatedFlag[0].value =
-                                          false
+                                          false,
+                                      tempBoxNum = 4
                                     }
                                   else
                                     {
@@ -425,7 +456,11 @@ class _ChatPage extends State<ChatPage> {
                                                   .value = false,
                                               controller.kutuActivatedFlag[0]
                                                   .value = true,
+                                              //arrayAssign(0),
+                                              print("Array assigned"),
                                               connectBluetooth("siyah1"),
+                                              tempBoxNum = 0,
+                                              arrayAssign(0),
                                             }
                                           else
                                             {
@@ -461,7 +496,8 @@ class _ChatPage extends State<ChatPage> {
                                     {
                                       disconnectBluetooth(),
                                       controller.kutuActivatedFlag[1].value =
-                                          false
+                                          false,
+                                      tempBoxNum = 4,
                                     }
                                   else
                                     {
@@ -487,7 +523,10 @@ class _ChatPage extends State<ChatPage> {
                                                   .value = false,
                                               controller.kutuActivatedFlag[1]
                                                   .value = true,
+                                              //arrayAssign(1),
+                                              print("Array assigned"),
                                               connectBluetooth("kirmizi2"),
+                                              tempBoxNum = 1,
                                             }
                                           else
                                             {
@@ -522,7 +561,8 @@ class _ChatPage extends State<ChatPage> {
                                     {
                                       disconnectBluetooth(),
                                       controller.kutuActivatedFlag[2].value =
-                                          false
+                                          false,
+                                      tempBoxNum = 4,
                                     }
                                   else
                                     {
@@ -549,6 +589,7 @@ class _ChatPage extends State<ChatPage> {
                                               controller.kutuActivatedFlag[2]
                                                   .value = true,
                                               connectBluetooth("yesil3"),
+                                              tempBoxNum = 2,
                                             }
                                           else
                                             {
@@ -616,7 +657,8 @@ class _ChatPage extends State<ChatPage> {
                                     {
                                       disconnectBluetooth(),
                                       controller.kutuActivatedFlag[3].value =
-                                          false
+                                          false,
+                                      tempBoxNum = 4,
                                     }
                                   else
                                     {
@@ -643,6 +685,7 @@ class _ChatPage extends State<ChatPage> {
                                               controller.kutuActivatedFlag[3]
                                                   .value = true,
                                               connectBluetooth("mavi4"),
+                                              tempBoxNum = 3,
                                             }
                                           else
                                             {
@@ -697,7 +740,9 @@ class _ChatPage extends State<ChatPage> {
                                         alignment: Alignment.center,
                                         child: Image.asset(
                                           controller
-                                                  .buttonsActivatedFlag[0].value
+                                                  .buttonsActivatedFlag[
+                                                      tempBoxNum][0]
+                                                  .value
                                               ? "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myArka/boyun.png"
                                               : "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myArka/null.png",
                                         )),
@@ -705,7 +750,9 @@ class _ChatPage extends State<ChatPage> {
                                         alignment: Alignment.center,
                                         child: Image.asset(
                                           controller
-                                                  .buttonsActivatedFlag[2].value
+                                                  .buttonsActivatedFlag[
+                                                      tempBoxNum][2]
+                                                  .value
                                               ? "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myArka/sirt.png"
                                               : "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myArka/null.png",
                                         )),
@@ -713,7 +760,9 @@ class _ChatPage extends State<ChatPage> {
                                         alignment: Alignment.center,
                                         child: Image.asset(
                                           controller
-                                                  .buttonsActivatedFlag[3].value
+                                                  .buttonsActivatedFlag[
+                                                      tempBoxNum][3]
+                                                  .value
                                               ? "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myArka/bel.png"
                                               : "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myArka/null.png",
                                         )),
@@ -721,7 +770,9 @@ class _ChatPage extends State<ChatPage> {
                                         alignment: Alignment.center,
                                         child: Image.asset(
                                           controller
-                                                  .buttonsActivatedFlag[4].value
+                                                  .buttonsActivatedFlag[
+                                                      tempBoxNum][4]
+                                                  .value
                                               ? "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myArka/kol.png"
                                               : "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myArka/null.png",
                                         )),
@@ -729,7 +780,9 @@ class _ChatPage extends State<ChatPage> {
                                         alignment: Alignment.center,
                                         child: Image.asset(
                                           controller
-                                                  .buttonsActivatedFlag[6].value
+                                                  .buttonsActivatedFlag[
+                                                      tempBoxNum][6]
+                                                  .value
                                               ? "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myArka/popo.png"
                                               : "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myArka/null.png",
                                         )),
@@ -737,7 +790,9 @@ class _ChatPage extends State<ChatPage> {
                                         alignment: Alignment.center,
                                         child: Image.asset(
                                           controller
-                                                  .buttonsActivatedFlag[7].value
+                                                  .buttonsActivatedFlag[
+                                                      tempBoxNum][7]
+                                                  .value
                                               ? "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myArka/bacak.png"
                                               : "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myArka/null.png",
                                         )),
@@ -786,8 +841,9 @@ class _ChatPage extends State<ChatPage> {
                                           valueColor:
                                               new AlwaysStoppedAnimation<Color>(
                                                   Colors.orange),
-                                          value:
-                                              controller.progressValueAnt.value,
+                                          value: controller
+                                              .progressValueAnt[tempBoxNum]
+                                              .value,
                                         ),
                                       ],
                                     ),
@@ -824,8 +880,9 @@ class _ChatPage extends State<ChatPage> {
                                           valueColor:
                                               new AlwaysStoppedAnimation<Color>(
                                                   Colors.yellow),
-                                          value:
-                                              controller.progressValueCal.value,
+                                          value: controller
+                                              .progressValueCal[tempBoxNum]
+                                              .value,
                                         ),
                                       ],
                                     ),
@@ -863,8 +920,9 @@ class _ChatPage extends State<ChatPage> {
                                           valueColor:
                                               new AlwaysStoppedAnimation<Color>(
                                                   Colors.blue),
-                                          value:
-                                              controller.progressValueDin.value,
+                                          value: controller
+                                              .progressValueDin[tempBoxNum]
+                                              .value,
                                         ),
                                       ],
                                     )
@@ -890,7 +948,10 @@ class _ChatPage extends State<ChatPage> {
                                     Container(
                                       alignment: Alignment.center,
                                       child: Image.asset(
-                                        controller.buttonsActivatedFlag[1].value
+                                        controller
+                                                .buttonsActivatedFlag[
+                                                    tempBoxNum][1]
+                                                .value
                                             ? "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myOn/meme.png"
                                             : "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myOn/null.png",
                                       ),
@@ -899,7 +960,9 @@ class _ChatPage extends State<ChatPage> {
                                         alignment: Alignment.center,
                                         child: Image.asset(
                                           controller
-                                                  .buttonsActivatedFlag[4].value
+                                                  .buttonsActivatedFlag[
+                                                      tempBoxNum][4]
+                                                  .value
                                               ? "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myOn/kol.png"
                                               : "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myOn/null.png",
                                         )),
@@ -907,7 +970,9 @@ class _ChatPage extends State<ChatPage> {
                                         alignment: Alignment.center,
                                         child: Image.asset(
                                           controller
-                                                  .buttonsActivatedFlag[5].value
+                                                  .buttonsActivatedFlag[
+                                                      tempBoxNum][5]
+                                                  .value
                                               ? "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myOn/karin.png"
                                               : "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myOn/null.png",
                                         )),
@@ -915,7 +980,9 @@ class _ChatPage extends State<ChatPage> {
                                         alignment: Alignment.center,
                                         child: Image.asset(
                                           controller
-                                                  .buttonsActivatedFlag[7].value
+                                                  .buttonsActivatedFlag[
+                                                      tempBoxNum][7]
+                                                  .value
                                               ? "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myOn/bacak.png"
                                               : "assets/PNG/AntrenmanEkraniAktif/vucudBolgeleri/myOn/null.png",
                                         )),
@@ -936,7 +1003,7 @@ class _ChatPage extends State<ChatPage> {
                           //Increase Button                        //
                           GestureDetector(
                             onTap: () => {
-                              controller.arttir(),
+                              controller.arttir(tempBoxNum),
                               // if (isConnected)
                               //   {
                               // for (int i = 0; i < 12; i++)
@@ -1033,7 +1100,8 @@ class _ChatPage extends State<ChatPage> {
                           GestureDetector(
                             onTap: () => {
                               calSuresi = (controller.calismaDinlenmeSuresi[
-                                      widget.modMessage[4]])
+                                      widget.modMessage[
+                                          4]]) //widget. Class girdisi.
                                   .value,
                               dinSuresi = (controller.calismaDinlenmeSuresi[
                                       widget.modMessage[5]])
@@ -1042,20 +1110,23 @@ class _ChatPage extends State<ChatPage> {
                                           .antrenmanSuresi[widget.modMessage[0]]
                                       [widget.modMessage[2]])
                                   .value,
-                              controller.playFlag.value =
-                                  !controller.playFlag.value,
+                              controller.kutuPlayFlag[tempBoxNum].value =
+                                  !controller.kutuPlayFlag[tempBoxNum].value,
                               controller.changeOpacity(
-                                  controller.playFlag.value ? 1 : 0.25),
-                              if (controller.playFlag.value)
+                                  controller.kutuPlayFlag[tempBoxNum].value
+                                      ? 1
+                                      : 0.25,
+                                  tempBoxNum),
+                              if (controller.kutuPlayFlag[tempBoxNum].value)
                                 {
-                                  controller
-                                      .updateProgressAntrenmanSuresi(antSuresi),
+                                  controller.updateProgressAntrenmanSuresi(
+                                      antSuresi, tempBoxNum),
                                   controller.updateProgressCal(
-                                      calSuresi, dinSuresi)
+                                      calSuresi, dinSuresi, tempBoxNum)
                                 }
                             },
                             child: Image.asset(
-                                controller.playFlag.value
+                                controller.kutuPlayFlag[tempBoxNum].value
                                     ? "assets/PNG/AntrenmanEkraniAktif/stopButton.png"
                                     : "assets/PNG/AntrenmanEkraniPasif/baslat.png",
                                 height: Get.height / 10),
@@ -1063,7 +1134,7 @@ class _ChatPage extends State<ChatPage> {
                           //Decrease Button
                           GestureDetector(
                             onTap: () => {
-                              controller.azalt(),
+                              controller.azalt(tempBoxNum),
                               // if (isConnected)
                               //   {
                               //     for (int i = 0; i < 12; i++)
@@ -1123,16 +1194,19 @@ class _ChatPage extends State<ChatPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       GestureDetector(
-                        onTap: () => controller.buttonsActivatedFlag[4].value =
-                            !controller.buttonsActivatedFlag[4].value,
-                        onDoubleTap: () => controller.doubleTapped(),
+                        onTap: () => controller
+                                .buttonsActivatedFlag[tempBoxNum][4].value =
+                            !controller
+                                .buttonsActivatedFlag[tempBoxNum][4].value,
+                        onDoubleTap: () => controller.doubleTapped(tempBoxNum),
                         child: Stack(
                           alignment: Alignment(0, -0.5),
                           children: [
                             Opacity(
-                              opacity: controller.opacity.value,
+                              opacity: controller.opacity[tempBoxNum].value,
                               child: Image.asset(
-                                controller.buttonsActivatedFlag[4].value
+                                controller.buttonsActivatedFlag[tempBoxNum][4]
+                                        .value
                                     ? "assets/PNG/AntrenmanEkraniAktif/vucudYuvarlakButtonAktif.png"
                                     : "assets/PNG/AntrenmanEkraniAktif/vucudYuvalakButton.png",
                                 height: Get.height / 7,
@@ -1150,7 +1224,8 @@ class _ChatPage extends State<ChatPage> {
                               padding:
                                   EdgeInsets.only(top: buttonNumTextPadding),
                               child: Text(
-                                controller.buttonsContent[4].value.toString(),
+                                controller.buttonsContent[tempBoxNum][4].value
+                                    .toString(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     color: Colors.white,
@@ -1162,16 +1237,19 @@ class _ChatPage extends State<ChatPage> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () => controller.buttonsActivatedFlag[5].value =
-                            !controller.buttonsActivatedFlag[5].value,
-                        onDoubleTap: () => controller.doubleTapped(),
+                        onTap: () => controller
+                                .buttonsActivatedFlag[tempBoxNum][5].value =
+                            !controller
+                                .buttonsActivatedFlag[tempBoxNum][5].value,
+                        onDoubleTap: () => controller.doubleTapped(tempBoxNum),
                         child: Stack(
                           alignment: Alignment(0, -0.5),
                           children: [
                             Opacity(
-                              opacity: controller.opacity.value,
+                              opacity: controller.opacity[tempBoxNum].value,
                               child: Image.asset(
-                                controller.buttonsActivatedFlag[5].value
+                                controller.buttonsActivatedFlag[tempBoxNum][5]
+                                        .value
                                     ? "assets/PNG/AntrenmanEkraniAktif/vucudYuvarlakButtonAktif.png"
                                     : "assets/PNG/AntrenmanEkraniAktif/vucudYuvalakButton.png",
                                 height: Get.height / 7,
@@ -1189,7 +1267,8 @@ class _ChatPage extends State<ChatPage> {
                               padding:
                                   EdgeInsets.only(top: buttonNumTextPadding),
                               child: Text(
-                                controller.buttonsContent[5].value.toString(),
+                                controller.buttonsContent[tempBoxNum][5].value
+                                    .toString(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     color: Colors.white,
@@ -1201,16 +1280,19 @@ class _ChatPage extends State<ChatPage> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () => controller.buttonsActivatedFlag[6].value =
-                            !controller.buttonsActivatedFlag[6].value,
-                        onDoubleTap: () => controller.doubleTapped(),
+                        onTap: () => controller
+                                .buttonsActivatedFlag[tempBoxNum][6].value =
+                            !controller
+                                .buttonsActivatedFlag[tempBoxNum][6].value,
+                        onDoubleTap: () => controller.doubleTapped(tempBoxNum),
                         child: Stack(
                           alignment: Alignment(0, -0.5),
                           children: [
                             Opacity(
-                              opacity: controller.opacity.value,
+                              opacity: controller.opacity[tempBoxNum].value,
                               child: Image.asset(
-                                controller.buttonsActivatedFlag[6].value
+                                controller.buttonsActivatedFlag[tempBoxNum][6]
+                                        .value
                                     ? "assets/PNG/AntrenmanEkraniAktif/vucudYuvarlakButtonAktif.png"
                                     : "assets/PNG/AntrenmanEkraniAktif/vucudYuvalakButton.png",
                                 height: Get.height / 7,
@@ -1228,7 +1310,8 @@ class _ChatPage extends State<ChatPage> {
                               padding:
                                   EdgeInsets.only(top: buttonNumTextPadding),
                               child: Text(
-                                controller.buttonsContent[6].value.toString(),
+                                controller.buttonsContent[tempBoxNum][6].value
+                                    .toString(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     color: Colors.white,
@@ -1240,16 +1323,19 @@ class _ChatPage extends State<ChatPage> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () => controller.buttonsActivatedFlag[7].value =
-                            !controller.buttonsActivatedFlag[7].value,
-                        onDoubleTap: () => controller.doubleTapped(),
+                        onTap: () => controller
+                                .buttonsActivatedFlag[tempBoxNum][7].value =
+                            !controller
+                                .buttonsActivatedFlag[tempBoxNum][7].value,
+                        onDoubleTap: () => controller.doubleTapped(tempBoxNum),
                         child: Stack(
                           alignment: Alignment(0, -0.5),
                           children: [
                             Opacity(
-                              opacity: controller.opacity.value,
+                              opacity: controller.opacity[tempBoxNum].value,
                               child: Image.asset(
-                                controller.buttonsActivatedFlag[7].value
+                                controller.buttonsActivatedFlag[tempBoxNum][7]
+                                        .value
                                     ? "assets/PNG/AntrenmanEkraniAktif/vucudYuvarlakButtonAktif.png"
                                     : "assets/PNG/AntrenmanEkraniAktif/vucudYuvalakButton.png",
                                 height: Get.height / 7,
@@ -1267,7 +1353,8 @@ class _ChatPage extends State<ChatPage> {
                               padding:
                                   EdgeInsets.only(top: buttonNumTextPadding),
                               child: Text(
-                                controller.buttonsContent[7].value.toString(),
+                                controller.buttonsContent[tempBoxNum][7].value
+                                    .toString(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     color: Colors.white,
@@ -1321,6 +1408,15 @@ class _ChatPage extends State<ChatPage> {
             isConnecting = false;
             isDisconnecting = false;
             ableToConnect = true;
+            if (renk == "siyah1") {
+              tempBoxNum = 0;
+            } else if (renk == "kirmizi2") {
+              tempBoxNum = 1;
+            } else if (renk == "yesil3") {
+              tempBoxNum = 2;
+            } else if (renk == "mavi4") {
+              tempBoxNum = 3;
+            }
           },
         );
       });
@@ -1412,6 +1508,17 @@ class _ChatPage extends State<ChatPage> {
         // //
         // print("_sendMessage catch error!! eyooo");
       }
+    }
+  }
+
+  void arrayAssign(kutuNo) {
+    if (controller.kutuConnectedBeforeFlag[kutuNo].value == false) {
+      for (var i = 0; i < buttonsContent[4].length; i++) {
+        buttonsContent[kutuNo][i].value = buttonsContent[4][i].value;
+        print("buttonsContent[kutuTempNo][i].value");
+      }
+
+      controller.kutuConnectedBeforeFlag[kutuNo].value = true;
     }
   }
 }
